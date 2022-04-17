@@ -248,6 +248,8 @@
 1. [MISC] Added custom Autobrake event for SimConnect - @aguther (Andreas Guther)
 1. [EWD] Fixed failures not re-triggering when resolved - @tricky_dicky (Richard Pilbery)
 1. [SOUND] Prevent autopilot disconnect from sounding on C+D spawn - @tricky_dicky (Richard Pilbery) and @saschl (saschl#9432)
+1. [ATSU] Add FANS-C simulation for CPDLC - @Sven [de en] - (Sven Czarnian)
+1. [ATSU] Add VDL3-simulation of datalink transport protocol - @Sven [de en] - (Sven Czarnian)
 
 ## 0.7.0
 
