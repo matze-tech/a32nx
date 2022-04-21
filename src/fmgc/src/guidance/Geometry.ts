@@ -35,22 +35,27 @@ function isGuidableCapturingPath(guidable: Guidable): boolean {
 }
 
 export class Geometry {
-    /**
-     * The list of transitions between legs.
-     * - entry n: transition after leg n
-     */
-    transitions: Map<number, Transition>;
+    constructor(
+        /**
+         * The list of transitions between legs.
+         * - entry n: transition after leg n
+         */
+        public transitions: Map<number, Transition>,
 
-    /**
-     * The list of legs in this geometry, possibly connected through transitions:
-     * - entry n: nth leg, before transition n
-     */
-    legs: Map<number, Leg>;
+        /**
+         * The list of legs in this geometry, possibly connected through transitions:
+         * - entry n: nth leg, before transition n
+         */
+        public legs: Map<number, Leg>,
+
+        /**
+         * Whether this geometry is for a temporary flight plan
+         */
+        private temp: boolean,
+    ) {
+    }
 
     public version = 0;
-
-        private temp: boolean,
-    ) {}
 
     private listener = RegisterViewListener('JS_LISTENER_SIMVARS', null, true);
 
