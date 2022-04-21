@@ -65,7 +65,7 @@ class CDUFlightPlanPage {
             lat: NaN,
             long: NaN
         };
-        const stats = mcdu.flightPlanService.active.computeWaypointStatistics();
+        const stats = mcdu.flightPlanService.activeOrTemporary.computeWaypointStatistics();
         // const stats = fpm.getCurrentFlightPlan().computeWaypointStatistics(ppos);
 
         // TODO FIXME: Move from F-PLN A
@@ -189,7 +189,7 @@ class CDUFlightPlanPage {
                 // Bearing/Track
                 const bearingTrack = "";
                 if (wpPrev && wpPrev.isDiscontinuity === false && wp.type !== 14 /* HM */) {
-                    const magVar = Facilities.getMagVar(wpPrev.terminationWaypoint().location.lat, wpPrev.terminationWaypoint().location.lon);
+                    // const magVar = Facilities.getMagVar(wpPrev.terminationWaypoint().location.lat, wpPrev.terminationWaypoint().location.lon);
                     switch (rowI) {
                         case 1:
                             // if (mcdu.flightPlanService.activeOrTemporary.activeLegIndex === fpIndex) { TODO
@@ -531,7 +531,7 @@ class CDUFlightPlanPage {
                 destCell = mcdu.flightPlanService.activeOrTemporary.destinationAirport.ident;
                 destinationRunway = mcdu.flightPlanService.activeOrTemporary.destinationRunway;
                 if (destinationRunway) {
-                    destCell += Avionics.Utils.formatRunway(destinationRunway.designation);
+                    destCell += Avionics.Utils.formatRunway(destinationRunway.ident);
                 }
             }
             let destTimeCell = "----";
@@ -557,12 +557,12 @@ class CDUFlightPlanPage {
 
             addLskAt(5, () => mcdu.getDelaySwitchPage(),
                 () => {
-                    CDULateralRevisionPage.ShowPage(mcdu, mcdu.flightPlanService.activeOrTemporary.destinationAirport, fpm.getWaypointsCount() - 1);
+                    CDULateralRevisionPage.ShowPage(mcdu, mcdu.flightPlanService.activeOrTemporary.destinationLeg, mcdu.flightPlanService.activeOrTemporary.legCount - 1);
                 });
 
             addRskAt(5, () => mcdu.getDelaySwitchPage(),
                 () => {
-                    CDUVerticalRevisionPage.ShowPage(mcdu, mcdu.flightPlanService.activeOrTemporary.destinationAirport);
+                    CDUVerticalRevisionPage.ShowPage(mcdu, mcdu.flightPlanService.activeOrTemporary.destinationLeg);
                 });
         }
 
