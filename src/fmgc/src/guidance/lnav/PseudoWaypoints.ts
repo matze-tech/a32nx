@@ -16,6 +16,8 @@ import { Leg } from '@fmgc/guidance/lnav/legs/Leg';
 import { VerticalCheckpoint, VerticalCheckpointReason } from '@fmgc/guidance/vnav/profile/NavGeometryProfile';
 import { TimeUtils } from '@fmgc/utils/TimeUtils';
 import { AtmosphericConditions } from '@fmgc/guidance/vnav/AtmosphericConditions';
+import { XFLeg } from '@fmgc/guidance/lnav/legs/XF';
+import { VMLeg } from '@fmgc/guidance/lnav/legs/VM';
 
 const PWP_IDENT_CLIMB_CONSTRAINT_LEVEL_OFF = 'Level off for climb constraint';
 const PWP_IDENT_CONTINUE_CLIMB = 'Continue climb';
@@ -293,6 +295,18 @@ export class PseudoWaypoints implements GuidanceComponent {
                 continue;
             }
 
+            let distanceInDiscontinuity = 0;
+            const nextLeg = path.legs.get(i + 1);
+            const previousLeg = path.legs.get(i - 1);
+
+            if (leg instanceof XFLeg && leg.fix.endsInDiscontinuity && nextLeg instanceof XFLeg) {
+                distanceInDiscontinuity = Avionics.Utils.computeGreatCircleDistance(leg.fix.infos.coordinates, nextLeg.fix.infos.coordinates);
+            } else if (leg instanceof VMLeg && previousLeg instanceof XFLeg && nextLeg instanceof XFLeg) {
+                distanceInDiscontinuity = Avionics.Utils.computeGreatCircleDistance(previousLeg.fix.infos.coordinates, nextLeg.fix.infos.coordinates);
+            }
+
+            accumulator += distanceInDiscontinuity;
+
             const inboundTrans = path.transitions.get(i - 1);
             const outboundTrans = path.transitions.get(i);
 
@@ -315,6 +329,12 @@ export class PseudoWaypoints implements GuidanceComponent {
             }
 
             if (accumulator > distanceFromEnd) {
+                if (accumulator - totalLegPathLength > distanceFromEnd) {
+                    // Points lies on discontinuity (on the direct line between the two fixes)
+                    // In this case, we don't want to place the
+                    return undefined;
+                }
+
                 const distanceFromEndOfLeg = distanceFromEnd - (accumulator - totalLegPathLength);
 
                 let lla;
@@ -371,7 +391,7 @@ export class PseudoWaypoints implements GuidanceComponent {
             if (pwp) {
                 [efisSymbolLla, distanceFromLegTermination, alongLegIndex] = pwp;
             } else {
-                console.warn('[FMS/VNAV] Could not find place checkpoint:', checkpoint.reason);
+                console.warn('[FMS/VNAV] Could not place checkpoint:', checkpoint.reason);
             }
         }
 

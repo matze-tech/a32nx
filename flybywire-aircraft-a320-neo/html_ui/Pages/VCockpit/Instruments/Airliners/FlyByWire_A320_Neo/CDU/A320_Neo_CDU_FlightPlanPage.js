@@ -223,7 +223,7 @@ class CDUFlightPlanPage {
                 // Time
                 let timeCell = "----[s-text]";
                 let timeColor = "white";
-                if (ident !== "MANUAL" && verticalWaypoint && isFinite(verticalWaypoint.secondsFromPresent)) {
+                if (verticalWaypoint && isFinite(verticalWaypoint.secondsFromPresent)) {
                     const utcTime = SimVar.GetGlobalVarValue("ZULU TIME", "seconds");
 
                     timeCell = isFlying
@@ -313,14 +313,11 @@ class CDUFlightPlanPage {
                 if (verticalWaypoint && verticalWaypoint.speed) {
                     speedConstraint = verticalWaypoint.speed < 1 ? formatMachNumber(verticalWaypoint.speed) : Math.round(verticalWaypoint.speed);
 
-                    if (wp.speedConstraint > 10 && ident !== "MANUAL") {
+                    if (wp.speedConstraint > 10) {
                         speedPrefix = verticalWaypoint.isSpeedConstraintMet ? "{magenta}*{end}" : "{amber}*{end}";
                     }
-                } else if (wp.speedConstraint > 10 && ident !== "MANUAL") {
-                    spdColor = "magenta";
-                    slashColor = "magenta";
-                    speedConstraint = wp.speedConstraint;
                 }
+
                 speedConstraint = speedPrefix + speedConstraint;
 
                 // Altitude
@@ -348,7 +345,7 @@ class CDUFlightPlanPage {
                         altColor = color;
                     }
                     altitudeConstraint = altitudeConstraint.padStart(5,"\xa0");
-                } else if (ident !== "MANUAL") {
+                } else {
                     let altitudeToFormat = wp.legAltitude1;
 
                     if (hasAltConstraint && ident !== "(DECEL)") {
@@ -383,7 +380,7 @@ class CDUFlightPlanPage {
                     altColor = "white";
                 }
 
-                if (fpIndex !== fpm.getDestinationIndex()) {
+                if (fpIndex !== fpm.getDestinationIndex() && timeCell !== "----[s-text]") {
                     timeColor = color;
                 } else {
                     timeColor = "white";
@@ -410,7 +407,7 @@ class CDUFlightPlanPage {
                     altitudeConstraint: { alt: altitudeConstraint, altPrefix: altPrefix },
                     timeCell,
                     timeColor,
-                    fixAnnotation,
+                    fixAnnotation: fixAnnotation ? fixAnnotation : "",
                     bearingTrack,
                     isOverfly,
                     slashColor
@@ -511,7 +508,7 @@ class CDUFlightPlanPage {
                     active: false,
                     ident: pwp.mcduIdent || pwp.ident,
                     color: (fpm.isCurrentFlightPlanTemporary()) ? "yellow" : "green",
-                    distance: pwp.distanceInFP ? pwp.distanceInFP.toFixed(0) : "",
+                    distance: pwp.distanceInFP ? Math.round(pwp.distanceInFP).toFixed(0) : "",
                     spdColor: pwp.flightPlanInfo ? "green" : "white",
                     speedConstraint: speed,
                     altColor: pwp.flightPlanInfo ? "green" : "white",

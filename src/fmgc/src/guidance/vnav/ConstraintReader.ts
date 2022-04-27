@@ -5,6 +5,8 @@ import { Geometry } from '@fmgc/guidance/Geometry';
 import { AltitudeConstraintType, SpeedConstraintType } from '@fmgc/guidance/lnav/legs';
 import { FlightPlans, WaypointConstraintType } from '@fmgc/flightplanning/FlightPlanManager';
 import { AltitudeDescriptor } from '@fmgc/types/fstypes/FSEnums';
+import { VnavConfig } from '@fmgc/guidance/vnav/VnavConfig';
+import { VMLeg } from '@fmgc/guidance/lnav/legs/VM';
 
 export class ConstraintReader {
     public climbAlitudeConstraints: MaxAltitudeConstraint[] = [];
@@ -37,6 +39,8 @@ export class ConstraintReader {
             this.updateDistanceFromStart(i, geometry, activeLegIndex, activeTransIndex, ppos);
 
             const waypoint = this.flightPlanManager.getWaypoint(i, FlightPlans.Active);
+
+            // Here, we accumulate all the speed and altitude constraints behind the aircraft on waypoints that have already been sequenced.
             if (i < activeLegIndex - 1) {
                 if (waypoint.additionalData.constraintType === WaypointConstraintType.DES /* DES */) {
                     if (waypoint.speedConstraint > 100) {
@@ -55,7 +59,8 @@ export class ConstraintReader {
                 }
 
                 continue;
-            } if (i === activeLegIndex - 1) {
+            // Once we reach the first waypoint that's still in the flight plan, we set the most constraining of the speed-/alt constraints on this waypoint.
+            } else if (i === activeLegIndex - 1) {
                 if (maxDescentSpeed < Infinity) {
                     this.descentSpeedConstraints.push({
                         distanceFromStart: 0,
@@ -117,6 +122,10 @@ export class ConstraintReader {
                 }
             }
         }
+
+        if (VnavConfig.DEBUG_PROFILE) {
+            console.log(`[FMS/VNAV] Total distance: ${this.totalFlightPlanDistance}`);
+        }
     }
 
     private hasValidSpeedConstraint(leg: Leg): boolean {
@@ -173,6 +182,8 @@ export class ConstraintReader {
         const { legs, transitions } = geometry;
 
         const leg = legs.get(index);
+        const waypoint = this.flightPlanManager.getWaypoint(index, FlightPlans.Active);
+        const nextWaypoint = this.flightPlanManager.getWaypoint(index + 1, FlightPlans.Active);
 
         if (!leg || leg.isNull) {
             return;
@@ -186,21 +197,33 @@ export class ConstraintReader {
         );
 
         const correctedInboundLength = Number.isNaN(inboundLength) ? 0 : inboundLength;
-
         const totalLegLength = legDistance + correctedInboundLength + outboundLength;
 
         this.totalFlightPlanDistance += totalLegLength;
 
-        if (index < activeLegIndex) {
-            this.distanceToPresentPosition += totalLegLength;
+        if (waypoint.endsInDiscontinuity) {
+            const startingPointOfDisco = waypoint.discontinuityCanBeCleared
+                ? waypoint
+                : this.flightPlanManager.getWaypoint(index - 1, FlightPlans.Active); // MANUAL
+
+            this.totalFlightPlanDistance += Avionics.Utils.computeGreatCircleDistance(startingPointOfDisco.infos.coordinates, nextWaypoint.infos.coordinates);
         }
 
-        if (index === activeLegIndex) {
+        if (index < activeLegIndex) {
+            this.distanceToPresentPosition += totalLegLength;
+        } else if (index === activeLegIndex) {
             if (activeTransIndex < 0) {
-                this.distanceToPresentPosition += legDistance + correctedInboundLength - leg.getDistanceToGo(ppos);
+                const distanceToGo = leg instanceof VMLeg
+                    ? Avionics.Utils.computeGreatCircleDistance(ppos, nextWaypoint.infos.coordinates)
+                    : leg.getDistanceToGo(ppos);
+
+                // On a leg, not on any guided transition
+                this.distanceToPresentPosition += legDistance + correctedInboundLength - distanceToGo;
             } else if (activeTransIndex === activeLegIndex) {
+                // On an outbound transition
                 this.distanceToPresentPosition += legDistance + correctedInboundLength - outboundTransition.getDistanceToGo(ppos) - outboundLength;
             } else if (activeTransIndex === activeLegIndex - 1) {
+                // On an inbound transition
                 this.distanceToPresentPosition += correctedInboundLength - inboundTransition.getDistanceToGo(ppos);
             } else {
                 console.error(`[FMS/VNAV] Unexpected transition index (legIndex: ${activeLegIndex}, transIndex: ${activeTransIndex})`);

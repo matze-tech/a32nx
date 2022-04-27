@@ -1,6 +1,8 @@
 import { BaseGeometryProfile } from '@fmgc/guidance/vnav/profile/BaseGeometryProfile';
 import { ConstraintReader } from '@fmgc/guidance/vnav/ConstraintReader';
 import { AtmosphericConditions } from '@fmgc/guidance/vnav/AtmosphericConditions';
+import { XFLeg } from '@fmgc/guidance/lnav/legs/XF';
+import { VMLeg } from '@fmgc/guidance/lnav/legs/VM';
 import { Geometry } from '../../Geometry';
 import { AltitudeConstraint, AltitudeConstraintType, PathAngleConstraint, SpeedConstraint, SpeedConstraintType } from '../../lnav/legs';
 
@@ -157,15 +159,22 @@ export class NavGeometryProfile extends BaseGeometryProfile {
 
         for (let i = 0; i < this.waypointCount; i++) {
             const leg = this.geometry.legs.get(i);
-            if (!leg) {
+            if (!leg || leg.isNull) {
                 continue;
             }
 
             const inboundTransition = this.geometry.transitions.get(i - 1);
+            const outboundTransition = this.geometry.transitions.get(i);
 
-            totalDistance += Geometry.completeLegPathLengths(
-                leg, (inboundTransition?.isNull || !inboundTransition?.isComputed) ? null : inboundTransition, this.geometry.transitions.get(i),
-            ).reduce((sum, el) => sum + (!Number.isNaN(el) ? el : 0), 0);
+            const [inboundLength, legDistance, outboundLength] = Geometry.completeLegPathLengths(
+                leg, (inboundTransition?.isNull || !inboundTransition?.isComputed) ? null : inboundTransition, outboundTransition,
+            );
+
+            const correctedInboundLength = Number.isNaN(inboundLength) ? 0 : inboundLength;
+
+            const totalLegLength = legDistance + correctedInboundLength + outboundLength;
+
+            totalDistance += totalLegLength;
 
             const { secondsFromPresent, altitude, speed, mach } = this.interpolateEverythingFromStart(totalDistance);
 
@@ -182,6 +191,18 @@ export class NavGeometryProfile extends BaseGeometryProfile {
                 altError: this.computeAltError(altitude, leg.metadata.altitudeConstraint),
                 distanceToTopOfDescent: topOfDescent ? topOfDescent.distanceFromStart - totalDistance : null,
             });
+
+            let distanceInDiscontinuity = 0;
+            const nextLeg = this.geometry.legs.get(i + 1);
+            const previousLeg = this.geometry.legs.get(i - 1);
+
+            if (leg instanceof XFLeg && leg.fix.endsInDiscontinuity && nextLeg instanceof XFLeg) {
+                distanceInDiscontinuity = Avionics.Utils.computeGreatCircleDistance(leg.fix.infos.coordinates, nextLeg.fix.infos.coordinates);
+            } else if (leg instanceof VMLeg && previousLeg instanceof XFLeg && nextLeg instanceof XFLeg) {
+                distanceInDiscontinuity = Avionics.Utils.computeGreatCircleDistance(previousLeg.fix.infos.coordinates, nextLeg.fix.infos.coordinates);
+            }
+
+            totalDistance += distanceInDiscontinuity;
         }
 
         return predictions;

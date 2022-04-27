@@ -45,17 +45,6 @@ export class AircraftToDescentProfileRelation {
         // TODO: Remove this
         profile.checkpoints = profile.checkpoints.filter(({ reason }) => reason !== VerticalCheckpointReason.PresentPosition);
 
-        if (VnavConfig.DEBUG_PROFILE && this.currentProfile) {
-            // How much the distance to the end of the path changed between the current profile and the new one.
-            // Ideally, this should be as low as possible. Otherwise, there might be a bug
-            const distanceToEndDeviation = this.currentProfile.getDistanceFromStart(this.inertialDistanceAlongTrack.get())
-                - profile.getDistanceFromStart(profile.distanceToPresentPosition);
-
-            if (Math.abs(distanceToEndDeviation) >= 0.1) {
-                console.log(`[FMS/VNAV] Large distanceToEndDeviation: ${distanceToEndDeviation}`);
-            }
-        }
-
         this.currentProfile = profile;
 
         this.inertialDistanceAlongTrack.updateCorrectInformation(lastPosition.distanceFromStart);
