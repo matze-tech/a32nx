@@ -196,6 +196,7 @@ class GeometricPathPlanner {
         );
 
         this.steps[this.currentConstraintIndex++] = step;
+        this.currentCheckpoint = this.updateCheckpointFromStep(this.currentCheckpoint, step);
     }
 
     resetToIndex(index: number) {
