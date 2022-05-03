@@ -295,7 +295,7 @@ class CDUVerticalRevisionPage {
                 CDUWindPage.ShowPage(mcdu);
             }; // WIND
             mcdu.onRightInput[4] = () => {
-                if (!isCruiseAltEntered) {
+                if (!mcdu._cruiseEntered || !mcdu._cruiseFlightLevel) {
                     return;
                 }
                 CDUStepAltsPage.Return = () => {
