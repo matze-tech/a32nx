@@ -60,6 +60,7 @@
 1. [FMGC] Fix ident for CD legs - @tracernz (Mike)
 1. [HYD] Refactor plane accelerations and added filtering to handle ground collisions - @Crocket63 (crocket)
 1. [FMGC] Improve procedure loading performance - @tracernz (Mike)
+1. [EFB] Added pause at T/D function - @2hwk (2Cas#1022)
 
 ## 0.8.0
 
