@@ -316,7 +316,6 @@
 1. [ATSU] Add FANS-C simulation for CPDLC - @Sven [de en] - (Sven Czarnian)
 1. [ATSU] Add VDL3-simulation of datalink transport protocol - @Sven [de en] - (Sven Czarnian)
 1. [FMGC] Improve robustness of ILS auto-tuning - @tracernz (Mike)
-1. [ADDON] Simbridge Integration - @lucky38i (Alex)
 
 ## 0.7.0
 
@@ -1099,5 +1098,4 @@
 1. [MISC] Standby Instrument stays ON if emergency power should be available, bug fixes - @2hwk (2Cas#1022 on discord)
 1. [CDU] Full +/- button functionality - @lhoenig (Lukas Hoenig)
 1. [DCDU] Fixed MSG- and MSG+ button labels - @tyler58546 (tyler58546)
-1. [OVHD] Fixed fire push button not being able to be stowed - Julian Sebline (Julian Sebline#8476 on Discord)
 1. [ISIS] Fixed issue where ISIS was allowing a bug to be set while in the OFF state - Patrick Macken (@Pat M on Discord)
