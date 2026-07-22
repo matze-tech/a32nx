@@ -13,6 +13,7 @@ import { testFlightPlanService } from '@fmgc/flightplanning/test/TestFlightPlanS
 import { FlightPlanEvents } from '@fmgc/flightplanning/sync/FlightPlanEvents';
 import { NavigationDatabaseService } from '@fmgc/flightplanning/NavigationDatabaseService';
 import { testEventBus } from '@fmgc/flightplanning/test/TestEventBus';
+import { FlightPlan } from '@fmgc/flightplanning/plans/FlightPlan';
 
 describe('a base flight plan', () => {
   beforeAll(() => {
@@ -39,6 +40,17 @@ describe('a base flight plan', () => {
     expect(fp.allLegs[2].isDiscontinuity).toBeTruthy();
 
     expect(fp.allLegs).toHaveLength(4);
+  });
+
+  it('falls back destination transition level to destination transition altitude', () => {
+    const fp = emptyFlightPlan();
+
+    (FlightPlan as any).setDestinationDefaultPerformanceData(fp, {
+      location: { alt: 110 },
+      transitionAltitude: 5000,
+    });
+
+    expect(fp.performanceData.databaseTransitionLevel.get()).toBe(50);
   });
 
   it('can insert an airway', async ({ onTestFinished }) => {

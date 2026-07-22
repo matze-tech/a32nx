@@ -583,7 +583,10 @@ export class FlightPlan<P extends FlightPlanPerformanceData = FlightPlanPerforma
     plan.setPerformanceData('pilotMissedAccelerationAltitude', null);
     plan.setPerformanceData('pilotMissedEngineOutAccelerationAltitude', null);
 
-    plan.setPerformanceData('databaseTransitionLevel', airport?.transitionLevel ?? null);
+    plan.setPerformanceData(
+      'databaseTransitionLevel',
+      airport?.transitionLevel ?? (airport?.transitionAltitude ? Math.round(airport.transitionAltitude / 100) : null),
+    );
 
     plan.deleteDescentWindEntries();
   }
