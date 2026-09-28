@@ -2069,7 +2069,9 @@ impl A380Hydraulic {
                 // TODO: find more accurate numbers
                 Length::new::<inch>(26.),
                 Length::new::<inch>(20.),
-                Mass::new::<kilogram>(110.),
+                // Use brake stack mass instead of the full wheel + brake assembly mass
+                // so that post-landing heating better matches expected behavior.
+                Mass::new::<kilogram>(50.),
             ),
             left_wing_brake_assembly: BrakeAssembly::new(
                 context,
